@@ -3,7 +3,7 @@
 ## Table of Contents
 
 -   [10156 - Number Of Units Per Nationality](#question-1)
--   [Question 2](#question-2)
+-   [10142 - No Order Customers](#question-2)
 -   [Question 3](#question-3)
 -   [Question 4](#question-4)
 -   [Question 5](#question-5)
@@ -15,7 +15,8 @@
 
 ------------------------------------------------------------------------
 
-## 10156 - Number Of Units Per Nationality {#question-1}
+<a id="question-1"></a>
+## 10156 - Number Of Units Per Nationality
 
 **Solution:**
 
@@ -33,7 +34,23 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 2 {#question-2}
+<a id="question-2"></a>
+## Question 2
+
+**Solution:**
+
+``` sql
+SELECT first_name
+FROM customers
+WHERE id NOT IN (SELECT cust_id
+                 FROM orders
+                 WHERE order_date BETWEEN '2019-02-01' AND '2019-03-01')
+```
+
+------------------------------------------------------------------------
+
+<a id="question-3"></a>
+## Question 3
 
 **Problem:**
 
@@ -44,7 +61,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 3 {#question-3}
+<a id="question-4"></a>
+## Question 4
 
 **Problem:**
 
@@ -55,7 +73,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 4 {#question-4}
+<a id="question-5"></a>
+## Question 5
 
 **Problem:**
 
@@ -66,7 +85,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 5 {#question-5}
+<a id="question-6"></a>
+## Question 6
 
 **Problem:**
 
@@ -77,7 +97,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 6 {#question-6}
+<a id="question-7"></a>
+## Question 7
 
 **Problem:**
 
@@ -88,7 +109,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 7 {#question-7}
+<a id="question-8"></a>
+## Question 8
 
 **Problem:**
 
@@ -99,7 +121,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 8 {#question-8}
+<a id="question-9"></a>
+## Question 9
 
 **Problem:**
 
@@ -110,18 +133,8 @@ ORDER BY apartment_count DESC
 
 ------------------------------------------------------------------------
 
-## Question 9 {#question-9}
-
-**Problem:**
-
-**Solution:**
-
-``` sql
-```
-
-------------------------------------------------------------------------
-
-## Question 10 {#question-10}
+<a id="question-10"></a>
+## Question 10
 
 **Problem:**
 
