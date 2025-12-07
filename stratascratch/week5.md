@@ -5,7 +5,7 @@
 -   [10156 - Number Of Units Per Nationality](#question-1)
 -   [10142 - No Order Customers](#question-2)
 -   [10141 - Apple Product Counts](#question-3)
--   [Question 4](#question-4)
+-   [2007 - Rank Variance Per Country](#question-4)
 -   [Question 5](#question-5)
 -   [Question 6](#question-6)
 -   [Question 7](#question-7)
@@ -68,13 +68,33 @@ ORDER BY n_total_users DESC
 ------------------------------------------------------------------------
 
 <a id="question-4"></a>
-## Question 4
-
-**Problem:**
+## 2007 - Rank Variance Per Country
 
 **Solution:**
 
 ``` sql
+
+WITH monthly AS (
+    SELECT u.country
+         , DATE_FORMAT(c.created_at, '%Y-%m') AS ym
+         , SUM(number_of_comments) AS total_comments
+    FROM fb_comments_count c
+    JOIN fb_active_users u
+    ON c.user_id = u.user_id
+    WHERE DATE_FORMAT(c.created_at, '%Y-%m') BETWEEN '2019-12' AND '2020-01'
+    GROUP BY u.country, ym
+)
+SELECT t1.country
+FROM (SELECT *
+           , DENSE_RANK() OVER(ORDER BY total_comments DESC) AS rank_2019
+        FROM monthly
+        WHERE ym = '2019-12') t1
+JOIN (SELECT *
+           , DENSE_RANK() OVER(ORDER BY total_comments DESC) AS rank_2020
+        FROM monthly
+        WHERE ym = '2020-01') t2
+ON t1.country = t2.country
+WHERE t1.rank_2019 > t2.rank_2020
 ```
 
 ------------------------------------------------------------------------
