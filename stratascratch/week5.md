@@ -4,7 +4,7 @@
 
 -   [10156 - Number Of Units Per Nationality](#question-1)
 -   [10142 - No Order Customers](#question-2)
--   [Question 3](#question-3)
+-   [10141 - Apple Product Counts](#question-3)
 -   [Question 4](#question-4)
 -   [Question 5](#question-5)
 -   [Question 6](#question-6)
@@ -35,7 +35,7 @@ ORDER BY apartment_count DESC
 ------------------------------------------------------------------------
 
 <a id="question-2"></a>
-## Question 2
+## 10142 - No Order Customers
 
 **Solution:**
 
@@ -50,13 +50,19 @@ WHERE id NOT IN (SELECT cust_id
 ------------------------------------------------------------------------
 
 <a id="question-3"></a>
-## Question 3
-
-**Problem:**
+## 10141 - Apple Product Counts
 
 **Solution:**
 
 ``` sql
+SELECT u.language
+     , COUNT(DISTINCT CASE WHEN e.device IN ('macbook pro', 'iphone 5s', 'ipad air') THEN u.user_id ELSE NULL END) AS n_apple_user
+     , COUNT(DISTINCT u.user_id) AS n_total_users
+FROM playbook_events e
+LEFT JOIN playbook_users u
+ON e.user_id = u.user_id
+GROUP BY u.language
+ORDER BY n_total_users DESC
 ```
 
 ------------------------------------------------------------------------
