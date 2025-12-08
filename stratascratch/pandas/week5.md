@@ -38,7 +38,11 @@ pd.merge(airbnb_hosts[airbnb_hosts["age"] <= 30],
 **Solution:**
 
 ``` python
+# Import your libraries
+import pandas as pd
 
+# Start writing code
+customers.loc[~customers["id"].isin(orders.loc[orders["order_date"].between("2019-02-01", "2019-03-01"), "cust_id"]), "first_name"]
 ```
 
 ------------------------------------------------------------------------
@@ -48,15 +52,16 @@ pd.merge(airbnb_hosts[airbnb_hosts["age"] <= 30],
 
 **Solution:**
 
-``` sql
-SELECT u.language
-     , COUNT(DISTINCT CASE WHEN e.device IN ('macbook pro', 'iphone 5s', 'ipad air') THEN u.user_id ELSE NULL END) AS n_apple_user
-     , COUNT(DISTINCT u.user_id) AS n_total_users
-FROM playbook_events e
-LEFT JOIN playbook_users u
-ON e.user_id = u.user_id
-GROUP BY u.language
-ORDER BY n_total_users DESC
+``` python
+# Import your libraries
+import pandas as pd
+
+# Start writing code
+merged = pd.merge(playbook_events, playbook_users, on="user_id")
+merged = merged[["language", "device", "user_id"]].drop_duplicates()
+merged["apple_user"] = merged["device"].isin(["macbook pro", "iphone 5s", "ipad air"]).astype(int)
+merged.groupby("language").agg({"apple_user":"sum","user_id":"nunique"}).reset_index()
+
 ```
 
 ------------------------------------------------------------------------
@@ -66,7 +71,7 @@ ORDER BY n_total_users DESC
 
 **Solution:**
 
-``` sql
+``` python
 
 WITH monthly AS (
     SELECT u.country
