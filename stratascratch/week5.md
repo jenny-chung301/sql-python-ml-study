@@ -6,9 +6,9 @@
 -   [10142 - No Order Customers](#question-2)
 -   [10141 - Apple Product Counts](#question-3)
 -   [2007 - Rank Variance Per Country](#question-4)
--   [Question 5](#question-5)
--   [Question 6](#question-6)
--   [Question 7](#question-7)
+-   [10547 - Actor Rating Difference Analysis](#question-5)
+-   [10171 - Find the genre of the person with the most number of oscar winnings](#question-6)
+-   [10548 - Top Actor Ratings by Genre](#question-7)
 -   [Question 8](#question-8)
 -   [Question 9](#question-9)
 -   [Question 10](#question-10)
@@ -100,37 +100,86 @@ WHERE t1.rank_2019 > t2.rank_2020
 ------------------------------------------------------------------------
 
 <a id="question-5"></a>
-## Question 5
-
-**Problem:**
+## 10547 - Actor Rating Difference Analysis
 
 **Solution:**
 
 ``` sql
+
+WITH ranks AS (
+    SELECT *
+         , RANK() OVER(PARTITION BY actor_name ORDER BY release_date DESC) AS rk
+         , COUNT(*) OVER(PARTITION BY actor_name) AS total_flim
+    FROM actor_rating_shift
+)
+SELECT actor_name
+     , AVG(CASE WHEN total_flim > 1 AND rk <> 1 THEN film_rating 
+              WHEN total_flim = 1 THEN film_rating ELSE NULL END) AS avg_rating
+    , SUM(CASE WHEN rk = 1 THEN film_rating ELSE NULL END) AS latest_rating
+    , ROUND((SUM(CASE WHEN rk = 1 THEN film_rating ELSE NULL END)) - (AVG(CASE WHEN total_flim > 1 AND rk <> 1 THEN film_rating 
+              WHEN total_flim = 1 THEN film_rating ELSE NULL END)), 2) AS rating_difference
+FROM ranks
+GROUP BY actor_name
 ```
 
 ------------------------------------------------------------------------
 
 <a id="question-6"></a>
-## Question 6
-
-**Problem:**
+## 10171 - Find the genre of the person with the most number of oscar winnings
 
 **Solution:**
 
 ``` sql
+
+WITH winner AS (
+    SELECT nominee
+         , COUNT(*) OVER(PARTITION BY nominee) AS wins
+    FROM oscar_nominees n
+    WHERE winner = 1
+)
+SELECT i.top_genre
+FROM winner w
+JOIN nominee_information i
+ON w.nominee = i.name
+ORDER BY w.wins DESC
+       , w.nominee
+LIMIT 1
+
 ```
 
 ------------------------------------------------------------------------
 
 <a id="question-7"></a>
-## Question 7
-
-**Problem:**
+## 10548 - Top Actor Ratings by Genre
 
 **Solution:**
 
 ``` sql
+
+WITH rating AS (
+    SELECT actor_name
+         , genre
+         , COUNT(*) AS genre_cnt
+         , AVG(movie_rating) AS avg_rating
+         , DENSE_RANK() OVER(PARTITION BY actor_name ORDER BY COUNT(*) DESC, AVG(movie_rating) DESC) AS drank
+    FROM top_actors_rating
+    GROUP BY actor_name
+           , genre
+), ranks AS (
+    SELECT actor_name
+         , genre
+         , avg_rating
+         , DENSE_RANK() OVER(ORDER BY avg_rating DESC) AS actor_rank
+    FROM rating
+    WHERE drank = 1
+)
+SELECT *
+FROM ranks
+WHERE actor_rank <=3
+ORDER BY actor_rank
+       , genre
+
+
 ```
 
 ------------------------------------------------------------------------
