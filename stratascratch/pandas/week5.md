@@ -6,9 +6,9 @@
 -   [10142 - No Order Customers](#question-2)
 -   [10141 - Apple Product Counts](#question-3)
 -   [2007 - Rank Variance Per Country](#question-4)
--   [10547 - Actor Rating Difference Analysis](#question-5)
--   [10171 - Find the genre of the person with the most number of oscar winnings](#question-6)
--   [10548 - Top Actor Ratings by Genre](#question-7)
+-   [10049 - Reviews of Categories](#question-5)
+-   [10090 - Find the percentage of shipable orders](#question-6)
+-   [10078 - Matching Similar Hosts and Guests](#question-7)
 -   [Question 8](#question-8)
 -   [Question 9](#question-9)
 -   [Question 10](#question-10)
@@ -73,111 +73,65 @@ merged.groupby("language").agg({"apple_user":"sum","user_id":"nunique"}).reset_i
 
 ``` python
 
-WITH monthly AS (
-    SELECT u.country
-         , DATE_FORMAT(c.created_at, '%Y-%m') AS ym
-         , SUM(number_of_comments) AS total_comments
-    FROM fb_comments_count c
-    JOIN fb_active_users u
-    ON c.user_id = u.user_id
-    WHERE DATE_FORMAT(c.created_at, '%Y-%m') BETWEEN '2019-12' AND '2020-01'
-    GROUP BY u.country, ym
-)
-SELECT t1.country
-FROM (SELECT *
-           , DENSE_RANK() OVER(ORDER BY total_comments DESC) AS rank_2019
-        FROM monthly
-        WHERE ym = '2019-12') t1
-JOIN (SELECT *
-           , DENSE_RANK() OVER(ORDER BY total_comments DESC) AS rank_2020
-        FROM monthly
-        WHERE ym = '2020-01') t2
-ON t1.country = t2.country
-WHERE t1.rank_2019 > t2.rank_2020
+import pandas as pd
+
+fb_comments_count["ym"] = fb_comments_count["created_at"].dt.strftime("%Y-%m")
+merged = pd.merge(fb_comments_count[fb_comments_count["ym"].isin(["2019-12", "2020-01"])],fb_active_users, on="user_id")
+merged = merged.groupby(["country", "ym"])["number_of_comments"].sum().reset_index()
+pivoted = merged.pivot(index="country", columns="ym", values="number_of_comments").reset_index().fillna(0)
+pivoted["rank_2019"] = pivoted["2019-12"].rank(ascending=False, method = "dense")
+pivoted["rank_2020"] = pivoted["2020-01"].rank(ascending=False, method = "dense")
+pivoted.loc[pivoted["rank_2019"] > pivoted["rank_2020"], "country"]
 ```
 
 ------------------------------------------------------------------------
 
 <a id="question-5"></a>
-## 10547 - Actor Rating Difference Analysis
+## 10049 - Reviews of Categories
 
 **Solution:**
 
-``` sql
+``` python
 
-WITH ranks AS (
-    SELECT *
-         , RANK() OVER(PARTITION BY actor_name ORDER BY release_date DESC) AS rk
-         , COUNT(*) OVER(PARTITION BY actor_name) AS total_flim
-    FROM actor_rating_shift
-)
-SELECT actor_name
-     , AVG(CASE WHEN total_flim > 1 AND rk <> 1 THEN film_rating 
-              WHEN total_flim = 1 THEN film_rating ELSE NULL END) AS avg_rating
-    , SUM(CASE WHEN rk = 1 THEN film_rating ELSE NULL END) AS latest_rating
-    , ROUND((SUM(CASE WHEN rk = 1 THEN film_rating ELSE NULL END)) - (AVG(CASE WHEN total_flim > 1 AND rk <> 1 THEN film_rating 
-              WHEN total_flim = 1 THEN film_rating ELSE NULL END)), 2) AS rating_difference
-FROM ranks
-GROUP BY actor_name
+# Import your libraries
+import pandas as pd
+
+# Start writing code
+yelp_business["category"] = yelp_business["categories"].str.split(";")
+df = yelp_business.explode("category")
+df.groupby("category")["review_count"].sum().reset_index(name="review_cnt")
 ```
 
 ------------------------------------------------------------------------
 
 <a id="question-6"></a>
-## 10171 - Find the genre of the person with the most number of oscar winnings
+## 10090 - Find the percentage of shipable orders
 
 **Solution:**
 
-``` sql
+``` python
+# Import your libraries
+import pandas as pd
 
-WITH winner AS (
-    SELECT nominee
-         , COUNT(*) OVER(PARTITION BY nominee) AS wins
-    FROM oscar_nominees n
-    WHERE winner = 1
-)
-SELECT i.top_genre
-FROM winner w
-JOIN nominee_information i
-ON w.nominee = i.name
-ORDER BY w.wins DESC
-       , w.nominee
-LIMIT 1
-
+# Start writing code
+merged = pd.merge(orders, customers, how="left", left_on="cust_id", right_on="id")
+percent_shipable = (merged.assign(percent_shipable=lambda x:x["address"].notna())["percent_shipable"].mean()*100)
+pd.DataFrame({"percent_shipable":[percent_shipable]})
 ```
 
 ------------------------------------------------------------------------
 
 <a id="question-7"></a>
-## 10548 - Top Actor Ratings by Genre
+## 10078 - Matching Similar Hosts and Guests
 
 **Solution:**
 
-``` sql
+``` python
+# Import your libraries
+import pandas as pd
 
-WITH rating AS (
-    SELECT actor_name
-         , genre
-         , COUNT(*) AS genre_cnt
-         , AVG(movie_rating) AS avg_rating
-         , DENSE_RANK() OVER(PARTITION BY actor_name ORDER BY COUNT(*) DESC, AVG(movie_rating) DESC) AS drank
-    FROM top_actors_rating
-    GROUP BY actor_name
-           , genre
-), ranks AS (
-    SELECT actor_name
-         , genre
-         , avg_rating
-         , DENSE_RANK() OVER(ORDER BY avg_rating DESC) AS actor_rank
-    FROM rating
-    WHERE drank = 1
-)
-SELECT *
-FROM ranks
-WHERE actor_rank <=3
-ORDER BY actor_rank
-       , genre
-
+# Start writing code
+pd.merge(airbnb_hosts, airbnb_guests,on=["gender", "nationality"])[["host_id", "guest_id"]].drop_duplicates()
 
 ```
 
